@@ -3,7 +3,7 @@ import { NostrEvent, NostrFetcher } from "nostr-fetch";
 import { SimplePool, finishEvent, getPublicKey, nip19 } from "nostr-tools";
 import "websocket-polyfill";
 import { CheckContext, buildResultMessage, checkReplyEvent } from "./check";
-import { unixtime } from "./util";
+import { publishToMultiRelays, unixtime } from "./util";
 
 const relayUrls = [
   "wss://relay-jp.nostr.wirednet.jp",
@@ -55,11 +55,11 @@ const main = async (privateKey: string) => {
   ]);
   sub.on("event", async (ev) => {
     console.log("received:", ev);
+
     const res = checkReplyEvent(ev, checkCtx);
     const msg = buildResultMessage(res);
 
     console.log("result:", res);
-    console.log("result msg:", msg);
 
     const authorRef = `nostr:${nip19.npubEncode(ev.pubkey)}`;
     const resultReply = finishEvent(
@@ -68,21 +68,22 @@ const main = async (privateKey: string) => {
         content: `${authorRef}\n${msg}`,
         tags: [
           ["p", ev.pubkey, ""],
-          ["e", ev.id, "", "reply"],
+          ["e", ev.id, "", "root"],
         ],
         created_at: unixtime(),
       },
       privateKey
     );
 
-    // await publishToMultiRelays(resultReply, pool, relayUrls);
     console.log(resultReply);
+    await publishToMultiRelays(resultReply, pool, relayUrls);
+    console.log("sent reply");
   });
 };
 
 const PRIVATE_KEY = process.env["PRIVATE_KEY"];
 if (!PRIVATE_KEY) {
-  console.error("set PRIVATE_KEY!");
+  console.error("set the env variable: PRIVATE_KEY!");
   process.exit(1);
 }
 

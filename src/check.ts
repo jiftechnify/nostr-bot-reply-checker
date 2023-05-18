@@ -31,10 +31,10 @@ type ReferentType = "pubkey" | "eventId";
 
 type TagIndexRef = {
   refType: "tagIndex";
-  index: number; // インデックス
+  index: number;
   referentType: ReferentType;
   referent: string;
-  tag: string[]; // 対応するタグ
+  tag: string[];
 };
 
 type InvalidTagIndexRef = {
@@ -179,12 +179,12 @@ export const checkReplyEvent = (
 
 type PostType = "reply" | "quote";
 
-const hasEntry = <T>(arr: T[]): boolean => arr.length > 0;
+const isNonEmpty = <T>(arr: T[]): boolean => arr.length > 0;
 
 const detectPostType = (checkRes: CheckResult): PostType[] => {
   const { pTagToMe, eTagsToMyPosts, refsToMyPosts } = checkRes;
-  if (hasEntry(pTagToMe) && hasEntry(eTagsToMyPosts)) {
-    if (hasEntry(refsToMyPosts)) {
+  if (isNonEmpty(pTagToMe) && isNonEmpty(eTagsToMyPosts)) {
+    if (isNonEmpty(refsToMyPosts)) {
       // 投稿への参照を含むなら、リプライであると同時に引用でもあると考える
       return ["quote", "reply"];
     }
@@ -192,11 +192,11 @@ const detectPostType = (checkRes: CheckResult): PostType[] => {
   }
 
   // 以下、pタグかeタグがない場合
-  if (hasEntry(pTagToMe)) {
+  if (isNonEmpty(pTagToMe)) {
     // pタグのみならリプライ
     return ["reply"];
   }
-  if (hasEntry(eTagsToMyPosts)) {
+  if (isNonEmpty(eTagsToMyPosts)) {
     // eタグのみなら一旦引用とみなす
     return ["quote"];
   }
@@ -206,15 +206,15 @@ const detectPostType = (checkRes: CheckResult): PostType[] => {
 const msg = {
   validReply: "✅正しいリプライです！",
   replyWith27Ref:
-    "- 💯本文にリプライ先ユーザへの参照(NIP-27形式)が含まれています",
+    "- 💯本文にリプライ先ユーザへの参照(NIP-27形式)が含まれています！",
   replyWith08Ref:
     "- ⚠️本文にリプライ先ユーザへの参照(NIP-08形式)が含まれています。この形式は現在では古い仕様となっています",
   replyWithoutRef:
-    "- 🙂本文にリプライ先ユーザへの参照が含まれていません。NIP-27に従って参照を含めることで、リプライ対象がわかりやすく表示されるようになります",
+    "- 🙂本文にリプライ先ユーザへの参照が含まれていないようです。NIP-27に従って参照を含めることで、リプライ対象がわかりやすく表示されるようになります",
   replyWithoutRefAndETag:
-    "- 😶本文にリプライ先ユーザへの参照が含まれていません。特定の投稿を対象としないリプライの場合は、NIP-27に従って参照を含めることでリプライ対象のユーザを明示することをおすすめします",
+    "- 😶e本文にリプライ先ユーザへの参照が含まれていないようです。特定の投稿を対象としないリプライの場合は、NIP-27に従って参照を含めることでリプライ対象のユーザを明示することをおすすめします。なお、eタグを設定したにもかかわらずこのメッセージが表示されている場合は、イベントIDが間違っている可能性があります",
   validQuote: "✅正しい引用リポストです！",
-  quoteWith27Ref: "- 💯本文に引用先投稿への参照(NIP-27形式)が含まれています",
+  quoteWith27Ref: "- 💯本文に引用先投稿への参照(NIP-27形式)が含まれています！",
   quoteWith08Ref:
     "- ⚠️本文に引用先投稿への参照(NIP-08形式)が含まれています。この形式は現在では古い仕様となっています",
   quoteWithoutRef:
@@ -237,14 +237,14 @@ export const buildResultMessage = (checkRes: CheckResult): string => {
     switch (pt) {
       case "reply": {
         lines.push(msg.validReply);
-        if (hasEntry(refsToMe)) {
+        if (isNonEmpty(refsToMe)) {
           if (refsToMe.every((r) => r.refType === "nostrURI")) {
             lines.push(msg.replyWith27Ref);
           } else {
             lines.push(msg.replyWith08Ref);
           }
         } else {
-          if (hasEntry(eTagsToMyPosts)) {
+          if (isNonEmpty(eTagsToMyPosts)) {
             lines.push(msg.replyWithoutRef);
           } else {
             lines.push(msg.replyWithoutRefAndETag);
@@ -253,7 +253,7 @@ export const buildResultMessage = (checkRes: CheckResult): string => {
         break;
       }
       case "quote": {
-        if (hasEntry(refsToMyPosts)) {
+        if (isNonEmpty(refsToMyPosts)) {
           lines.push(msg.validQuote);
           if (refsToMyPosts.every((r) => r.refType === "nostrURI")) {
             lines.push(msg.quoteWith27Ref);
@@ -273,17 +273,19 @@ export const buildResultMessage = (checkRes: CheckResult): string => {
   }
 
   const invalidRefMsgs = [];
-  if (hasEntry(invalidTagIndexRefs)) {
+  if (isNonEmpty(invalidTagIndexRefs)) {
     invalidRefMsgs.push(
       `🤯本文に含まれているNIP-08形式の参照(#[n])のうち、${invalidTagIndexRefs.length}件が不正です！`
     );
   }
-  if (hasEntry(invalidNostrURIRefs)) {
+  if (isNonEmpty(invalidNostrURIRefs)) {
     invalidRefMsgs.push(
       `🤯本文に含まれているNIP-27形式の参照(nostr: ...)のうち、${invalidNostrURIRefs.length}件が不正です！`
     );
   }
-  submsgs.push(invalidRefMsgs.join("\n"));
+  if (isNonEmpty(invalidRefMsgs)) {
+    submsgs.push(invalidRefMsgs.join("\n"));
+  }
 
   return submsgs.join("\n\n");
 };

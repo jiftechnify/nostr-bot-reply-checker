@@ -17,7 +17,7 @@ const relayUrls = [
 
 const main = async () => {
   if (!PRIVATE_KEY) {
-    console.error("set PRIVATE_KEY!");
+    console.error("set the env variable: PRIVATE_KEY!");
     process.exit(1);
   }
 
