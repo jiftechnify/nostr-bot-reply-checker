@@ -1,11 +1,7 @@
-import {
-  Event,
-  EventTemplate,
-  Relay,
-  finishEvent,
-  relayInit,
-} from "nostr-tools";
+import { EventTemplate, finishEvent, relayInit } from "nostr-tools";
 import "websocket-polyfill";
+
+import { publishToRelay, unixtime } from "./util";
 
 import botProfile from "../bot_profile.json";
 
@@ -18,22 +14,6 @@ const relayUrls = [
   "wss://nostr.holybea.com",
   "wss://relay.damus.io",
 ];
-
-const unixtime = (date = new Date()) => Math.floor(date.getTime() / 1000);
-
-const publishToRelay = (r: Relay, ev: Event) => {
-  return new Promise<void>((resolve) => {
-    const pub = r.publish(ev);
-    pub.on("ok", () => {
-      console.log("ok", r.url);
-      resolve();
-    });
-    pub.on("failed", () => {
-      console.log("failed", r.url);
-      resolve();
-    });
-  });
-};
 
 const main = async () => {
   if (!PRIVATE_KEY) {
