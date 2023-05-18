@@ -20,7 +20,8 @@
     "exec-ts": "node --loader esbuild-register/loader -r esbuild-register",
     "launch": "yarn exec-ts src/index.ts",
     "set-profile": "yarn exec-ts src/set_profile.ts",
-    "post-text": "yarn exec-ts src/post_text.ts"
+    "post-text": "yarn exec-ts src/post_text.ts",
+    "gen-key-pair": "yarn exec-ts src/gen_key_pair.ts"
   },
   "devDependencies": {
     "@tsconfig/strictest": "^2.0.1",
