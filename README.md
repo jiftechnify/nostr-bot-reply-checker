@@ -1,2 +1,1 @@
-# nostr-reply-checker
-
+# nostr-bot-reply-checker

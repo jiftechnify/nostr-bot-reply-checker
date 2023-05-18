@@ -1,7 +1,7 @@
 {
-  "name": "nostr-reply-checker",
+  "name": "nostr-bot-reply-checker",
   "version": "0.1.0",
-  "description": "Nostr bot that checks whether reply is correctly implemented",
+  "description": "A Nostr bot that checks whether reply is correctly implemented",
   "type": "module",
   "main": "./dist/index.js",
   "private": "true",
