@@ -199,10 +199,10 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
-"@nostr-fetch/adapter-nostr-tools@^0.5.2":
-  version "0.5.2"
-  resolved "https://registry.yarnpkg.com/@nostr-fetch/adapter-nostr-tools/-/adapter-nostr-tools-0.5.2.tgz#7faf8508c4a41ea3aa2edc7a7edb33ed6e224947"
-  integrity sha512-yZzn0eSffdJMcuz3QpPoj9JxeUnNvSrXm8hkhAfnHKAqyaesWVJWYSO2AEJtqQlU3SYJwpNy/9xYZ1RIW0W9CA==
+"@nostr-fetch/adapter-nostr-tools@^0.5.3":
+  version "0.5.3"
+  resolved "https://registry.yarnpkg.com/@nostr-fetch/adapter-nostr-tools/-/adapter-nostr-tools-0.5.3.tgz#6e3304dd317a59d066f384fc07a945b4e4dc27cf"
+  integrity sha512-kftMaGW0sqLZR/xXsTrrbxZDnsA9BrFrpUWLnVNLfgWseEZVi1tdHT/IM9T1W+Fizq1Jws9N39pJRtcybI4Xgw==
 
 "@scure/base@1.1.1", "@scure/base@~1.1.0":
   version "1.1.1"
