@@ -19,7 +19,8 @@
     "build:types": "tsc -p tsconfig.build.json",
     "exec-ts": "node --loader esbuild-register/loader -r esbuild-register",
     "launch": "yarn exec-ts src/index.ts",
-    "set-profile": "yarn exec-ts src/set_profile.ts"
+    "set-profile": "yarn exec-ts src/set_profile.ts",
+    "post-text": "yarn exec-ts src/post_text.ts"
   },
   "devDependencies": {
     "@tsconfig/strictest": "^2.0.1",
