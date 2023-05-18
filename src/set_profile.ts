@@ -1,33 +1,23 @@
-import { EventTemplate, finishEvent, relayInit } from "nostr-tools";
 import "websocket-polyfill";
 
+import { EventTemplate, finishEvent, relayInit } from "nostr-tools";
 import { publishToRelay, unixtime } from "./util";
 
-import botProfile from "../bot_profile.json";
-
-const PRIVATE_KEY = process.env["PRIVATE_KEY"];
-
-const relayUrls = [
-  "wss://relay-jp.nostr.wirednet.jp",
-  "wss://nostr.h3z.jp",
-  "wss://nostr-relay.nokotaro.com",
-  "wss://nostr.holybea.com",
-  "wss://relay.damus.io",
-];
+import { privateKey, profile, relayUrls } from "../bot_config.json";
 
 const main = async () => {
-  if (!PRIVATE_KEY) {
-    console.error("set the env variable: PRIVATE_KEY!");
+  if (!privateKey) {
+    console.error("set privateKey!");
     process.exit(1);
   }
 
   const ev: EventTemplate = {
     kind: 0,
-    content: JSON.stringify(botProfile),
+    content: JSON.stringify(profile),
     created_at: unixtime(),
     tags: [],
   };
-  const signed = finishEvent(ev, PRIVATE_KEY);
+  const signed = finishEvent(ev, privateKey);
   console.log("signed event:", signed);
 
   await Promise.all(

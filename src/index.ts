@@ -1,23 +1,18 @@
+import "websocket-polyfill";
+
 import { simplePoolAdapter } from "@nostr-fetch/adapter-nostr-tools";
 import { NostrEvent, NostrFetcher } from "nostr-fetch";
 import { SimplePool, finishEvent, getPublicKey, nip19 } from "nostr-tools";
-import "websocket-polyfill";
 import { CheckContext, buildResultMessage, checkReplyEvent } from "./check";
 import { publishToMultiRelays, unixtime } from "./util";
 
-const relayUrls = [
-  "wss://relay-jp.nostr.wirednet.jp",
-  "wss://nostr.h3z.jp",
-  "wss://nostr-relay.nokotaro.com",
-  "wss://nostr.holybea.com",
-  "wss://relay.damus.io",
-];
+import { privateKey, relayUrls } from "../bot_config.json";
 
 // (kind 1の)イベントがリプライ <-> e か p タグを持つ
 const isReply = (ev: NostrEvent) =>
   ev.tags.some(([tagName]) => ["e", "p"].includes(tagName ?? ""));
 
-const main = async (privateKey: string) => {
+const main = async () => {
   const pubkey = getPublicKey(privateKey);
   console.log(pubkey);
 
@@ -81,10 +76,9 @@ const main = async (privateKey: string) => {
   });
 };
 
-const PRIVATE_KEY = process.env["PRIVATE_KEY"];
-if (!PRIVATE_KEY) {
-  console.error("set the env variable: PRIVATE_KEY!");
+if (!privateKey) {
+  console.error("set privateKey!");
   process.exit(1);
 }
 
-main(PRIVATE_KEY);
+main().catch((e) => console.log(e));

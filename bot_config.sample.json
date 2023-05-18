@@ -1,0 +1,15 @@
+{
+  "privateKey": "private key (hex)",
+  "relayUrls": [
+    "wss://relay-jp.nostr.wirednet.jp",
+    "wss://nostr.h3z.jp",
+    "wss://nostr-relay.nokotaro.com",
+    "wss://nostr.holybea.com",
+    "wss://relay.damus.io"
+  ],
+  "profile": {
+    "name": "スクリーンネーム",
+    "display_name": "表示名",
+    "about": "説明"
+  }
+}
