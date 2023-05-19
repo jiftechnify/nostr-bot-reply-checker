@@ -8,14 +8,25 @@ import { publishToMultiRelays, unixtime } from "./util";
 
 import { privateKey, relayUrls } from "../bot_config.json";
 
+import pino from "pino";
+
+const logger = pino({
+  level: "debug",
+  transport: {
+    target: "pino-pretty",
+    options: { translateTime: "SYS:standard" },
+  },
+});
+
 // (kind 1の)イベントがリプライ <-> e か p タグを持つ
 const isReply = (ev: NostrEvent) =>
   ev.tags.some(([tagName]) => ["e", "p"].includes(tagName ?? ""));
 
 const main = async () => {
   const pubkey = getPublicKey(privateKey);
-  console.log(pubkey);
+  logger.info({ pubkey }, "my pubkey");
 
+  logger.debug("fetching non-reply posts from me...");
   const pool = new SimplePool();
   const fetcher = NostrFetcher.withRelayPool(simplePoolAdapter(pool), {
     enableDebugLog: true,
@@ -28,10 +39,9 @@ const main = async () => {
       { connectTimeoutMs: 3000, abortSubBeforeEoseTimeoutMs: 3000 }
     )
     .then((posts) => posts.filter((e) => !isReply(e)).map((e) => e.id));
+  logger.debug({ myPostIds }, "non-reply posts from me");
 
-  console.log(myPostIds);
-
-  console.log("starting checker...");
+  logger.info("starting checker...");
   const checkCtx: CheckContext = {
     pubkey,
     myPostIds,
@@ -49,12 +59,14 @@ const main = async () => {
     },
   ]);
   sub.on("event", async (ev) => {
-    console.log("received:", ev);
+    const chkLogger = logger.child({ replyEventId: ev.id });
+    chkLogger.info(`received reply`);
+    chkLogger.debug({ ev }, "reply event detail");
 
     const res = checkReplyEvent(ev, checkCtx);
     const msg = buildResultMessage(res);
 
-    console.log("result:", res);
+    chkLogger.debug({ res }, "check result");
 
     const authorRef = `nostr:${nip19.npubEncode(ev.pubkey)}`;
     const resultReply = finishEvent(
@@ -70,15 +82,17 @@ const main = async () => {
       privateKey
     );
 
-    console.log(resultReply);
-    await publishToMultiRelays(resultReply, pool, relayUrls);
-    console.log("sent reply");
+    chkLogger.debug(`result message: ${msg}`);
+    const pubResult = await publishToMultiRelays(resultReply, pool, relayUrls);
+    chkLogger.debug({ pubResult }, "sent reply");
+
+    chkLogger.info(`check finished`);
   });
 };
 
 if (!privateKey) {
-  console.error("set privateKey!");
+  logger.error("set privateKey!");
   process.exit(1);
 }
 
-main().catch((e) => console.log(e));
+main().catch((e) => logger.error(e));
