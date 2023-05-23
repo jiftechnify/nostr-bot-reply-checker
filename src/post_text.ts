@@ -27,7 +27,7 @@ const main = async () => {
   console.log("signed event:", signed);
 
   await Promise.all(
-    relayUrls.map(async (rurl) => {
+    relayUrls.write.map(async (rurl) => {
       const r = relayInit(rurl);
       await r.connect();
       await publishToRelay(r, signed);

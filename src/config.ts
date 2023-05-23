@@ -1,7 +1,10 @@
 declare module "*/bot_config.json" {
   type Config = {
     privateKey: string;
-    relayUrls: string[];
+    relayUrls: {
+      read: string[];
+      write: string[];
+    };
     profile: {
       name: string;
       display_name: string;

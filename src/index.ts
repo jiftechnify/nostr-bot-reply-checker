@@ -33,7 +33,7 @@ const main = async () => {
   });
   const myPostIds = await fetcher
     .fetchAllEvents(
-      relayUrls,
+      relayUrls.read,
       [{ authors: [pubkey], kinds: [1] }],
       {},
       { connectTimeoutMs: 3000, abortSubBeforeEoseTimeoutMs: 3000 }
@@ -46,7 +46,7 @@ const main = async () => {
     pubkey,
     myPostIds,
   };
-  const sub = pool.sub(relayUrls, [
+  const sub = pool.sub(relayUrls.read, [
     {
       kinds: [1],
       "#p": [pubkey],
@@ -83,7 +83,11 @@ const main = async () => {
     );
 
     chkLogger.debug(`result message: ${msg}`);
-    const pubResult = await publishToMultiRelays(resultReply, pool, relayUrls);
+    const pubResult = await publishToMultiRelays(
+      resultReply,
+      pool,
+      relayUrls.write
+    );
     chkLogger.debug({ pubResult }, "sent reply");
 
     chkLogger.info(`check finished`);
