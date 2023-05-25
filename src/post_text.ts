@@ -1,7 +1,9 @@
 import "websocket-polyfill";
 
-import { EventTemplate, finishEvent, relayInit } from "nostr-tools";
-import { publishToRelay, unixtime } from "./util";
+import { RelayPool } from "nostr-relaypool";
+import { EventTemplate, finishEvent } from "nostr-tools";
+
+import { publishToMultiRelays, unixtime } from "./util";
 
 import { privateKey, relayUrls } from "../bot_config.json";
 
@@ -26,14 +28,8 @@ const main = async () => {
   const signed = finishEvent(ev, privateKey);
   console.log("signed event:", signed);
 
-  await Promise.all(
-    relayUrls.write.map(async (rurl) => {
-      const r = relayInit(rurl);
-      await r.connect();
-      await publishToRelay(r, signed);
-      r.close();
-    })
-  );
+  const pool = new RelayPool(relayUrls.write);
+  await publishToMultiRelays(signed, pool, relayUrls.write);
 };
 
 main().catch((e) => console.error(e));

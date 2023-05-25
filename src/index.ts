@@ -1,8 +1,9 @@
 import "websocket-polyfill";
 
-import { simplePoolAdapter } from "@nostr-fetch/adapter-nostr-tools";
 import { NostrEvent, NostrFetcher } from "nostr-fetch";
-import { SimplePool, finishEvent, getPublicKey, nip19 } from "nostr-tools";
+import { RelayPool } from "nostr-relaypool";
+import { finishEvent, getPublicKey, nip19 } from "nostr-tools";
+
 import { CheckContext, buildResultMessage, checkReplyEvent } from "./check";
 import { publishToMultiRelays, unixtime } from "./util";
 
@@ -27,8 +28,7 @@ const main = async () => {
   logger.info({ pubkey }, "my pubkey");
 
   logger.debug("fetching non-reply posts from me...");
-  const pool = new SimplePool();
-  const fetcher = NostrFetcher.withRelayPool(simplePoolAdapter(pool), {
+  const fetcher = NostrFetcher.init({
     enableDebugLog: true,
   });
   const myPostIds = await fetcher
@@ -46,52 +46,61 @@ const main = async () => {
     pubkey,
     myPostIds,
   };
-  const sub = pool.sub(relayUrls.read, [
-    {
-      kinds: [1],
-      "#p": [pubkey],
-      since: unixtime(),
-    },
-    {
-      kinds: [1],
-      "#e": myPostIds,
-      since: unixtime(),
-    },
-  ]);
-  sub.on("event", async (ev) => {
-    const chkLogger = logger.child({ replyEventId: ev.id });
-    chkLogger.info(`received reply`);
-    chkLogger.debug({ ev }, "reply event detail");
 
-    const res = checkReplyEvent(ev, checkCtx);
-    const msg = buildResultMessage(res);
-
-    chkLogger.debug({ res }, "check result");
-
-    const authorRef = `nostr:${nip19.npubEncode(ev.pubkey)}`;
-    const resultReply = finishEvent(
-      {
-        kind: 1,
-        content: `${authorRef}\n${msg}`,
-        tags: [
-          ["p", ev.pubkey, ""],
-          ["e", ev.id, "", "root"],
-        ],
-        created_at: unixtime(),
-      },
-      privateKey
-    );
-
-    chkLogger.debug(`result message: ${msg}`);
-    const pubResult = await publishToMultiRelays(
-      resultReply,
-      pool,
-      relayUrls.write
-    );
-    chkLogger.debug({ pubResult }, "sent reply");
-
-    chkLogger.info(`check finished`);
+  const pool = new RelayPool([...relayUrls.read, ...relayUrls.write], {
+    logSubscriptions: true,
+    autoReconnect: true,
   });
+  pool.subscribe(
+    [
+      {
+        kinds: [1],
+        "#p": [pubkey],
+        since: unixtime(),
+      },
+      {
+        kinds: [1],
+        "#e": myPostIds,
+        since: unixtime(),
+      },
+    ],
+    relayUrls.read,
+    async (ev) => {
+      const chkLogger = logger.child({ replyEventId: ev.id });
+      chkLogger.info(`received reply`);
+      chkLogger.debug({ ev }, "reply event detail");
+
+      const res = checkReplyEvent(ev, checkCtx);
+      const msg = buildResultMessage(res);
+
+      chkLogger.debug({ res }, "check result");
+
+      const authorRef = `nostr:${nip19.npubEncode(ev.pubkey)}`;
+      const resultReply = finishEvent(
+        {
+          kind: 1,
+          content: `${authorRef}\n${msg}`,
+          tags: [
+            ["p", ev.pubkey, ""],
+            ["e", ev.id, "", "root"],
+          ],
+          created_at: unixtime(),
+        },
+        privateKey
+      );
+
+      chkLogger.debug(`result message: ${msg}`);
+      const pubResult = await publishToMultiRelays(
+        resultReply,
+        pool,
+        relayUrls.write
+      );
+      // pool.publish(ev, relayUrls.write);
+      chkLogger.debug({ pubResult }, "sent reply");
+
+      chkLogger.info(`check finished`);
+    }
+  );
 };
 
 if (!privateKey) {
