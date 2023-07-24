@@ -34,7 +34,7 @@
     "typescript": "^5.0.4"
   },
   "dependencies": {
-    "nostr-fetch": "^0.5.2",
+    "nostr-fetch": "^0.12.1",
     "nostr-relaypool": "^0.6.28",
     "nostr-tools": "^1.11.0",
     "pino": "^8.14.1",

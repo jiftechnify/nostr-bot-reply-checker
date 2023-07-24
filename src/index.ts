@@ -29,12 +29,12 @@ const main = async () => {
 
   logger.debug("fetching non-reply posts from me...");
   const fetcher = NostrFetcher.init({
-    enableDebugLog: true,
+    minLogLevel: "info",
   });
   const myPostIds = await fetcher
     .fetchAllEvents(
       relayUrls.read,
-      [{ authors: [pubkey], kinds: [1] }],
+      { authors: [pubkey], kinds: [1] },
       {},
       { connectTimeoutMs: 3000, abortSubBeforeEoseTimeoutMs: 3000 }
     )
