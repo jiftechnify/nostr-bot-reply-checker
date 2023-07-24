@@ -66,39 +66,43 @@ const main = async () => {
     ],
     relayUrls.read,
     async (ev) => {
-      const chkLogger = logger.child({ replyEventId: ev.id });
-      chkLogger.info(`received reply`);
-      chkLogger.debug({ ev }, "reply event detail");
+      try {
+        const chkLogger = logger.child({ replyEventId: ev.id });
+        chkLogger.info(`received reply`);
+        chkLogger.debug({ ev }, "reply event detail");
 
-      const res = checkReplyEvent(ev, checkCtx);
-      const msg = buildResultMessage(res);
+        const res = checkReplyEvent(ev, checkCtx);
+        const msg = buildResultMessage(res);
 
-      chkLogger.debug({ res }, "check result");
+        chkLogger.debug({ res }, "check result");
 
-      const authorRef = `nostr:${nip19.npubEncode(ev.pubkey)}`;
-      const resultReply = finishEvent(
-        {
-          kind: 1,
-          content: `${authorRef}\n${msg}`,
-          tags: [
-            ["p", ev.pubkey, ""],
-            ["e", ev.id, "", "root"],
-          ],
-          created_at: unixtime(),
-        },
-        privateKey
-      );
+        const authorRef = `nostr:${nip19.npubEncode(ev.pubkey)}`;
+        const resultReply = finishEvent(
+          {
+            kind: 1,
+            content: `${authorRef}\n${msg}`,
+            tags: [
+              ["p", ev.pubkey, ""],
+              ["e", ev.id, "", "root"],
+            ],
+            created_at: unixtime(),
+          },
+          privateKey
+        );
 
-      chkLogger.debug(`result message: ${msg}`);
-      const pubResult = await publishToMultiRelays(
-        resultReply,
-        pool,
-        relayUrls.write
-      );
-      // pool.publish(ev, relayUrls.write);
-      chkLogger.debug({ pubResult }, "sent reply");
+        chkLogger.debug(`result message: ${msg}`);
+        const pubResult = await publishToMultiRelays(
+          resultReply,
+          pool,
+          relayUrls.write
+        );
+        // pool.publish(ev, relayUrls.write);
+        chkLogger.debug({ pubResult }, "sent reply");
 
-      chkLogger.info(`check finished`);
+        chkLogger.info(`check finished`);
+      } catch (err) {
+        console.error(err);
+      }
     }
   );
 };
