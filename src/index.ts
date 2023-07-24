@@ -40,6 +40,7 @@ const main = async () => {
     )
     .then((posts) => posts.filter((e) => !isReply(e)).map((e) => e.id));
   logger.debug({ myPostIds }, "non-reply posts from me");
+  fetcher.shutdown();
 
   logger.info("starting checker...");
   const checkCtx: CheckContext = {
